@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-8">
+    <h1 class="text-4xl font-bold text-gray-800">Hello, {{ user.first_name }}!</h1>
+    <p class="text-gray-600">Your role: <span class="capitalize font-semibold text-blue-600">{{ user.role }}</span></p>
+
+    <!-- ADMIN Dashboard View -->
+    {% if user.role == 'admin' %}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="card p-6 bg-white rounded-xl border border-blue-200">
+                <p class="text-lg font-medium text-gray-500">Total Users</p>
+                <p class="text-4xl font-bold text-blue-600 mt-1">{{ user_count }}</p>
+            </div>
+            <div class="card p-6 bg-white rounded-xl border border-green-200">
+                <p class="text-lg font-medium text-gray-500">Total Appointments</p>
+                <p class="text-4xl font-bold text-green-600 mt-1">{{ appointment_count }}</p>
+            </div>
+            <div class="card p-6 bg-white rounded-xl border border-purple-200">
+                <p class="text-lg font-medium text-gray-500">Departments</p>
+                <p class="text-4xl font-bold text-purple-600 mt-1">{{ dept_count }}</p>
+            </div>
+        </div>
+        
+        <h2 class="text-2xl font-semibold text-gray-800 mt-8">Recent Appointments</h2>
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+            {% if recent_appointments %}
+            <ul class="divide-y divide-gray-200">
+                {% for appt in recent_appointments %}
+                    <li class="py-4 flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ appt.patient.first_name }} {{ appt.patient.last_name }} (Patient)</p>
+                            <p class="text-sm text-gray-500">
+                                {{ appt.department_rel.name }} - {{ appt.treatment.treatment_name }}
+                            </p>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-700">
+                            {{ appt.appointment_datetime.strftime('%Y-%m-%d %H:%M') }}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-gray-500">No recent appointments found.</p>
+            {% endif %}
+        </div>
+        <a href="{{ url_for('manage_departments') }}" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Manage Departments
+        </a>
+
+    <!-- PATIENT Dashboard View -->
+    {% elif user.role == 'patient' %}
+        <!-- Appointment Booking Section -->
+        <div class="card p-6 bg-white rounded-xl shadow-xl">
+            <h2 class="text-2xl font-semibold text-blue-600 mb-4">Book a New Appointment</h2>
+            <form action="{{ url_for('book_appointment') }}" method="POST" class="space-y-4">
+                <div>
+                    <label for="department_id" class="block text-sm font-medium text-gray-700">Department</label>
+                    <select id="department_id" name="department_id" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="treatment_id" class="block text-sm font-medium text-gray-700">Treatment / Service</label>
+                    <select id="treatment_id" name="treatment_id" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        {% for treat in treatments %}
+                            <option value="{{ treat.id }}">{{ treat.treatment_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="appointment_datetime" class="block text-sm font-medium text-gray-700">Date and Time</label>
+                    <input type="datetime-local" id="appointment_datetime" name="appointment_datetime" required class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+
+                <button type="submit" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    Confirm Booking
+                </button>
+            </form>
+        </div>
+
+        <!-- My Appointments List -->
+        <h2 class="text-2xl font-semibold text-gray-800 mt-8">My Scheduled Appointments</h2>
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+            {% if appointments %}
+            <ul class="divide-y divide-gray-200">
+                {% for appt in appointments %}
+                    <li class="py-4 flex justify-between items-center flex-wrap">
+                        <div>
+                            <p class="text-base font-medium text-gray-900">
+                                {{ appt.department_rel.name }} - {{ appt.treatment.treatment_name }}
+                            </p>
+                            <p class="text-sm text-gray-500 mt-1">
+                                Doctor: {{ appt.doctor.first_name if appt.doctor else 'Unassigned' }}
+                            </p>
+                        </div>
+                        <div class="text-right mt-2 sm:mt-0">
+                            <span class="text-sm font-semibold text-gray-700 block">
+                                {{ appt.appointment_datetime.strftime('%Y-%m-%d @ %H:%M') }}
+                            </span>
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full capitalize 
+                                {% if appt.status == 'Booked' %}bg-blue-100 text-blue-800{% elif appt.status == 'Completed' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ appt.status }}
+                            </span>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-gray-500">You have no scheduled appointments. Book one above!</p>
+            {% endif %}
+        </div>
+
+    <!-- DOCTOR Dashboard View -->
+    {% elif user.role == 'doctor' %}
+        <h2 class="text-2xl font-semibold text-gray-800">Your Upcoming Appointments</h2>
+        <p class="text-gray-500">Specialization: {{ user.specialization.name }}</p>
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+            {% if appointments %}
+            <ul class="divide-y divide-gray-200">
+                {% for appt in appointments %}
+                    <li class="py-4 flex justify-between items-center flex-wrap">
+                        <div>
+                            <p class="text-base font-medium text-gray-900">
+                                Patient: {{ appt.patient.first_name }} {{ appt.patient.last_name }} 
+                            </p>
+                            <p class="text-sm text-gray-500 mt-1">
+                                For: {{ appt.treatment.treatment_name }} ({{ appt.department_rel.name }})
+                            </p>
+                        </div>
+                        <div class="text-right mt-2 sm:mt-0">
+                            <span class="text-sm font-semibold text-gray-700 block">
+                                {{ appt.appointment_datetime.strftime('%Y-%m-%d @ %H:%M') }}
+                            </span>
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full capitalize 
+                                {% if appt.status == 'Booked' %}bg-blue-100 text-blue-800{% elif appt.status == 'Completed' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ appt.status }}
+                            </span>
+                            <!-- Action button to mark as completed (Placeholder logic) -->
+                            {% if appt.status == 'Booked' %}
+                            <button class="mt-1 ml-2 text-xs bg-indigo-500 text-white px-3 py-1 rounded-full hover:bg-indigo-600">
+                                Start Session
+                            </button>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-gray-500">You have no upcoming appointments.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

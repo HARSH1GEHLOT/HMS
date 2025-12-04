@@ -1,0 +1,43 @@
+/*
+ * Custom CSS for Hospital Management App
+ * (Minor overrides and specific styling for visual appeal)
+ */
+
+/* Responsive adjustments for forms */
+@media (max-width: 640px) {
+    .login-container {
+        padding: 1rem;
+    }
+    .grid-cols-2 {
+        grid-template-columns: 1fr; /* Stack columns on small screens */
+    }
+}
+
+/* Enhancing button aesthetics */
+button[type="submit"], .nav-link {
+    transition: all 0.2s ease-in-out;
+}
+
+button[type="submit"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Subtle background pattern (optional but nice touch) */
+body {
+    background-color: #f7f9fb;
+}
+
+/* Scrollbar styling for a cleaner look */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #a0aec0;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #718096;
+}
